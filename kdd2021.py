@@ -1,6 +1,7 @@
 # To use this script, run `brew install chromedriver` first.
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -42,4 +43,13 @@ wordcloud = (
     .to_file(str(outdir / f"{NAME}.png"))
 )
 results.to_csv(outdir / f"{NAME}.csv", index=False)
+
+freqs = WordCloud(max_words=300).process_text("\n".join(texts_all))
+df_s = pd.DataFrame(
+    sorted(freqs.items(), key=lambda i: i[1], reverse=True), columns=["word", "freq"]
+)
+fig = plt.figure(figsize=(30, 30))
+df_s.loc[df_s["freq"] > df_s["freq"].quantile(0.95)].plot.barh(y="freq", x="word", ax=plt.gca())
+plt.savefig(outdir / f"{NAME}_ranks.png")
+
 print("Done.")
